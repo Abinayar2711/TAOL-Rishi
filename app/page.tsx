@@ -15,6 +15,8 @@ type School = {
   city: string;
   board: string;
   state_id: string;
+  created_at?: string | null; 
+  updated_at?: string | null; 
   is_deprecated?: boolean;
   deprecated_reason?: string | null;
   deprecated_at?: string | null;
@@ -313,18 +315,18 @@ const deleteComment = async (commentId: string) => {
     setBoard(s.board);
     setStateId(s.state_id);
 
-    setBatchType(s.batch_type ?? '');
-    setBatchApproved(!!s.batch_approved);
-    setBatchInitiated(!!s.batch_initiated);
+    setBatchType(s.school_details?.batch_type ?? '');
+    setBatchApproved(!!s.school_details?.batch_approved);
+    setBatchInitiated(!!s.school_details?.batch_initiated);
 
-    setSchoolPocName(s.school_poc_name ?? '');
-    setSchoolPocDesignation(s.school_poc_designation ?? '');
-    setSchoolPocEmail(s.school_poc_email ?? '');
-    setSchoolPocPhone(s.school_poc_phone ?? '');
+    setSchoolPocName(s.school_details?.school_poc_name ?? '');
+    setSchoolPocDesignation(s.school_details?.school_poc_designation ?? '');
+    setSchoolPocEmail(s.school_details?.school_poc_email ?? '');
+    setSchoolPocPhone(s.school_details?.school_poc_phone ?? '');
 
-    setAolPocName(s.aol_poc_name ?? '');
-    setAolPocEmail(s.aol_poc_email ?? '');
-    setAolPocPhone(s.aol_poc_phone ?? '');
+    setAolPocName(s.school_details?.aol_poc_name ?? '');
+    setAolPocEmail(s.school_details?.aol_poc_email ?? '');
+    setAolPocPhone(s.school_details?.aol_poc_phone ?? '');
 
     setShowForm(true);
   };
@@ -729,31 +731,31 @@ className="
 			  <h4 className="font-semibold mb-2">Batch</h4>
 
 			  <p>
-			    <b>Type:</b> {s.batch_type || '-'}
+			    <b>Type:</b> {s.school_details?.batch_type || '-'}
 			  </p>
 
 			  <p>
 			    <b>Approved:</b>{' '}
-			    {s.batch_approved ? 'Yes' : 'No'}
+			    {s.school_details?.batch_approved ? 'Yes' : 'No'}
 			  </p>
 
 			  <p>
 			    <b>Initiated:</b>{' '}
-			    {s.batch_initiated ? 'Yes' : 'No'}
+			    {s.school_details?.batch_initiated ? 'Yes' : 'No'}
 			  </p>
 		  </div>
                   <div>
                     <h4 className="font-semibold mb-2">School POC</h4>
-                    <p><b>Name:</b> {s.school_poc_name || '-'}</p>
-                    <p><b>Email:</b> {s.school_poc_email || '-'}</p>
-                    <p><b>Phone:</b> {s.school_poc_phone || '-'}</p>
+                    <p><b>Name:</b> {s.school_details?.school_poc_name || '-'}</p>
+                    <p><b>Email:</b> {s.school_details?.school_poc_email || '-'}</p>
+                    <p><b>Phone:</b> {s.school_details?.school_poc_phone || '-'}</p>
                   </div>
 
                   <div>
                     <h4 className="font-semibold mb-2">AOL POC</h4>
-                    <p><b>Name:</b> {s.aol_poc_name || '-'}</p>
-                    <p><b>Email:</b> {s.aol_poc_email || '-'}</p>
-                    <p><b>Phone:</b> {s.aol_poc_phone || '-'}</p>
+                    <p><b>Name:</b> {s.school_details?.aol_poc_name || '-'}</p>
+                    <p><b>Email:</b> {s.school_details?.aol_poc_email || '-'}</p>
+                    <p><b>Phone:</b> {s.school_details?.aol_poc_phone || '-'}</p>
                   </div>
 
                   {/* STATE REMARKS */}
