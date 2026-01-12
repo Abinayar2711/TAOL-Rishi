@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/lib/supabaseClient';
-
+import { useRouter } from 'next/navigation';
 
 type State = {
   id: string;
@@ -136,20 +136,45 @@ export default function Home() {
 
   /* ---------------- AUTH ---------------- */
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
+  const router = useRouter();
+
+useEffect(() => {
+  async function init() {
+    const { data: { session } } = await supabase.auth.getSession();
+
+    const user = session?.user ?? null;
+    setUser(user);
+
+    if (!user) {
       setLoading(false);
-    });
+      return;
+    }
 
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => setUser(session?.user ?? null)
-    );
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
 
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
+    if (profile?.role === 'national') {
+      router.push('/admin/state-coordinators');
+      return;
+    }
+
+    setLoading(false);
+  }
+
+  init();
+
+  const { data: listener } = supabase.auth.onAuthStateChange(
+    (_event, session) => setUser(session?.user ?? null)
+  );
+
+  return () => {
+    listener.subscription.unsubscribe();
+  };
+}, [router]);
+
 
   /* ---------------- DATA ---------------- */
 
@@ -429,6 +454,9 @@ const deleteComment = async (commentId: string) => {
   const signOut = async () => {
     await supabase.auth.signOut();
   };
+
+
+
 
   /* ---------------- UI ---------------- */
 

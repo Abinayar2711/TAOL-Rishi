@@ -1,8 +1,12 @@
+'use client'
+
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
 
 export default function StateCoordinatorsPage() {
   const [profile, setProfile] = useState<any>(null)
+  const router = useRouter()
 
   useEffect(() => {
     async function loadProfile() {
@@ -24,7 +28,8 @@ export default function StateCoordinatorsPage() {
   if (!profile) return <p>Loading...</p>
 
   if (profile.role !== 'national') {
-    return <p>Unauthorized</p>
+    router.push('/')
+    return null
   }
 
   return (
