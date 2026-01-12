@@ -18,8 +18,14 @@ export default function StateCoordinatorsPage() {
 
   useEffect(() => {
   async function loadProfileAndData() {
+    setLoading(true)
+
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
+    if (!user) {
+      setLoading(false) 
+      router.push('/login')
+      return
+    }
 
     const { data: profileData } = await supabase
       .from('profiles')
@@ -27,10 +33,16 @@ export default function StateCoordinatorsPage() {
       .eq('id', user.id)
       .single()
 
+    if (!profileData) {
+      setLoading(false)
+      return
+    }
+
     setProfile(profileData)
-    if (!profile) return null
-    if (profileData?.role === 'national') {
-      const { data: scData } = await supabase
+
+    // Only national loads coordinators
+    if (profileData.role === 'national') {
+      const { data: scData, error: scError } = await supabase
         .from('state_coordinators')
         .select(`
           id,
@@ -39,30 +51,38 @@ export default function StateCoordinatorsPage() {
           profiles ( email ),
           states ( name )
         `)
-
+      
+	console.log('scError', scError)
+	console.log('scData', scData)
       setCoordinators(scData || [])
     }
+
     const { data: statesData } = await supabase
-  .from('states')
-  .select('id, name')
-  .order('name')
+      .from('states')
+      .select('id, name')
+      .order('name')
 
-     setStates(statesData || [])
-
+    setStates(statesData || [])
     setLoading(false)
   }
 
   loadProfileAndData()
-}, [])
+}, [router])
+
 
 
   if (loading) return <p className="p-6">Loading...</p>
 
 
+  if (!profile) {
+  return <p className="p-6">Profile not found</p>
+}
+		
+
   if (profile.role !== 'national') {
-    router.push('/')
-    return null
-  }
+  return <p className="p-6">Access denied</p>
+}
+
 
   return (
     <div className="p-6">
