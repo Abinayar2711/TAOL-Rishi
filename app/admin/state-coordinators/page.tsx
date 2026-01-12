@@ -8,6 +8,10 @@ export default function StateCoordinatorsPage() {
   const [profile, setProfile] = useState<any>(null)
   const [coordinators, setCoordinators] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [email, setEmail] = useState('')
+  const [stateId, setStateId] = useState('')
+  const [states, setStates] = useState<any[]>([])
+
 
   const router = useRouter()
 
@@ -38,6 +42,12 @@ export default function StateCoordinatorsPage() {
 
       setCoordinators(scData || [])
     }
+    const { data: statesData } = await supabase
+  .from('states')
+  .select('id, name')
+  .order('name')
+
+     setStates(statesData || [])
 
     setLoading(false)
   }
@@ -59,6 +69,36 @@ export default function StateCoordinatorsPage() {
       <h1 className="text-xl font-semibold mb-4">
         State Coordinators
       </h1>
+   <div className="border p-4 mb-6">
+  <h2 className="font-medium mb-2">Add State Coordinator</h2>
+
+  <input
+    className="border p-2 w-full mb-2"
+    placeholder="Coordinator email"
+    value={email}
+    onChange={(e) => setEmail(e.target.value)}
+  />
+
+  <select
+    className="border p-2 w-full mb-2"
+    value={stateId}
+    onChange={(e) => setStateId(e.target.value)}
+  >
+    <option value="">Select state</option>
+    {states.map((s) => (
+      <option key={s.id} value={s.id}>
+        {s.name}
+      </option>
+    ))}
+  </select>
+
+  <button
+    className="bg-black text-white px-4 py-2"
+    disabled
+  >
+    Add Coordinator
+  </button>
+</div>
 
       {/* Add Coordinator Form will go here */}
       <table className="w-full border text-sm">
