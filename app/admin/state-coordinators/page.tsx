@@ -3,17 +3,19 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabaseClient'
+import { AuthGuard } from '@/app/auth/AuthGuard'
+import { RequireRole } from '@/app/auth/RequireRole'
 
-export default function StateCoordinatorsPage() {
-  const [profile, setProfile] = useState<any>(null)
-  const [coordinators, setCoordinators] = useState<any[]>([])
+export function StateCoordinatorsContent() {
+
+  const [coordinators, setCoordinators] = useState<any[]>([])	
   const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState('')
   const [stateId, setStateId] = useState('')
   const [states, setStates] = useState<any[]>([])
 
 
-  const router = useRouter()
+
 
   async function handleAddCoordinator() {
   if (!email || !stateId) {
@@ -63,45 +65,18 @@ export default function StateCoordinatorsPage() {
 };
 
   useEffect(() => {
-  async function loadProfileAndData() {
+  async function loadData() {
     setLoading(true)
 
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-      setLoading(false) 
-      router.push('/login')
-      return
-    }
+    const { data: scData } = await supabase
+      .from('state_coordinators')
+      .select(`
+        id,
+        profiles ( email ),
+        states ( name )
+      `)
 
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single()
-
-    if (!profileData) {
-      setLoading(false)
-      return
-    }
-
-    setProfile(profileData)
-
-    // Only national loads coordinators
-    if (profileData.role === 'national') {
-      const { data: scData, error: scError } = await supabase
-        .from('state_coordinators')
-        .select(`
-          id,
-          state_id,
-          user_id,
-          profiles ( email ),
-          states ( name )
-        `)
-      
-	console.log('scError', scError)
-	console.log('scData', scData)
-      setCoordinators(scData || [])
-    }
+    setCoordinators(scData || [])
 
     const { data: statesData } = await supabase
       .from('states')
@@ -112,23 +87,15 @@ export default function StateCoordinatorsPage() {
     setLoading(false)
   }
 
-  loadProfileAndData()
-}, [router])
+  loadData()
+}, [])
+
+  
 
 
 
   if (loading) return <p className="p-6">Loading...</p>
-
-
-  if (!profile) {
-  return <p className="p-6">Profile not found</p>
-}
-		
-
-  if (profile.role !== 'national') {
-  return <p className="p-6">Access denied</p>
-}
-
+  
 
   return (
     <div className="p-6">
@@ -190,5 +157,13 @@ export default function StateCoordinatorsPage() {
 
     </div>
   )
+};
+export default function StateCoordinatorsPage() {
+  return (
+    <AuthGuard>
+      <RequireRole role="national">
+        <StateCoordinatorsContent />
+      </RequireRole>
+    </AuthGuard>
+  )
 }
-
