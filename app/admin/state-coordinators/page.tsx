@@ -15,6 +15,52 @@ export default function StateCoordinatorsPage() {
 
   const router = useRouter()
 
+  async function handleAddCoordinator() {
+  if (!email || !stateId) {
+    alert('Email and state required')
+    return
+  }
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession()
+
+  if (!session) {
+    alert('Not authenticated')
+    return
+  }
+
+  const res = await fetch(
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/functions/v1/create-coordinator`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({ email, stateId }),
+    }
+  )
+
+  if (!res.ok) {
+    const text = await res.text()
+    alert(text)
+    return
+  }
+
+  // reload coordinators
+  const { data: scData } = await supabase
+    .from('state_coordinators')
+    .select(`
+      id,
+      profiles ( email ),
+      states ( name )
+    `)
+
+  setCoordinators(scData || [])
+  setEmail('')
+  setStateId('')
+};
 
   useEffect(() => {
   async function loadProfileAndData() {
@@ -114,7 +160,7 @@ export default function StateCoordinatorsPage() {
 
   <button
     className="bg-black text-white px-4 py-2"
-    disabled
+    onClick={handleAddCoordinator}
   >
     Add Coordinator
   </button>
