@@ -102,6 +102,10 @@ export default function Home() {
   const [commentSchoolId, setCommentSchoolId] = useState<string | null>(null);
   const [editingComment, setEditingComment] = useState<any | null>(null);
 
+  //AUTH
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
 
     // ---------------- DERIVED DATA ----------------
 
@@ -447,13 +451,34 @@ const deleteComment = async (commentId: string) => {
 
   /* ---------------- AUTH ---------------- */
 
-  const signInWithGoogle = async () => {
-    await supabase.auth.signInWithOAuth({ provider: 'google' });
-  };
+  const signInWithPassword = async () => {
+  setAuthLoading(true);
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
+  const { error } = await supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
+
+  setAuthLoading(false);
+
+  if (error) {
+    alert(error.message);
+  }
+};
+
+const resetPassword = async () => {
+  if (!email) {
+    alert('Enter email first');
+    return;
+  }
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin,
+  });
+
+  if (error) alert(error.message);
+  else alert('Password reset email sent');
+};
 
 
 
@@ -463,14 +488,46 @@ const deleteComment = async (commentId: string) => {
   if (loading) return <div className="p-6">Loading...</div>;
 
   if (!user) {
-    return (
-      <div className="flex min-h-screen items-center justify-center">
-        <button onClick={signInWithGoogle} className="rounded bg-black px-6 py-3 text-white">
-          Sign in with Google
+  return (
+    <div className="flex min-h-screen items-center justify-center">
+      <div className="w-96 space-y-4 border p-6 rounded">
+        <h1 className="text-xl font-semibold">Sign in</h1>
+
+        <input
+          type="email"
+          placeholder="Email"
+          className="w-full border px-3 py-2"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          className="w-full border px-3 py-2"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <button
+          onClick={signInWithPassword}
+          disabled={authLoading}
+          className="w-full bg-black text-white py-2"
+        >
+          {authLoading ? 'Signing in...' : 'Sign in'}
+        </button>
+
+        <button
+          onClick={resetPassword}
+          className="w-full text-sm underline"
+        >
+          Forgot password?
         </button>
       </div>
-    );
-  }
+    </div>
+  );
+}
+
 
   return (
   <div className="p-6">
