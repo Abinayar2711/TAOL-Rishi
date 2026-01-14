@@ -1,39 +1,58 @@
-'use client'
+'use client';
 
-import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabaseClient'
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+
+type Role = 'national' | 'coordinator' | null;
 
 export function useAuth() {
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<any>(null);
+  const [role, setRole] = useState<Role>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function load() {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
+    let mounted = true;
 
-      if (!session) {
-        setLoading(false)
-        return
+    const init = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const currentUser = session?.user ?? null;
+      if (!mounted) return;
+
+      setUser(currentUser);
+
+      if (!currentUser) {
+        setRole(null);
+        setLoading(false);
+        return;
       }
 
-      setUser(session.user)
-
-      const { data: profileData } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('id', session.user.id)
-        .single()
+        .select('role')
+        .eq('id', currentUser.id)
+        .single();
 
-      setProfile(profileData)
-      setLoading(false)
-    }
+      if (!mounted) return;
 
-    load()
-  }, [])
+      setRole(profile?.role ?? null);
+      setLoading(false);
+    };
 
-  return { user, profile, loading }
+    init();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
+  return { user, role, loading };
 }
 

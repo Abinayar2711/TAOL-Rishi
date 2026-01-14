@@ -1,19 +1,45 @@
-'use client'
+'use client';
 
-import { useAuth } from './useAuth'
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/navigation';
+import { ReactNode, useEffect } from 'react';
+import { useAuth } from './useAuth';
 
-export function AuthGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth()
-  const router = useRouter()
+type Props = {
+  children: ReactNode;
+  allow: Array<'national' | 'coordinator'>;
+};
 
-  if (loading) return <p>Loading...</p>
+export function AuthGuard({ children, allow }: Props) {
+  const { user, role, loading } = useAuth();
+  const router = useRouter();
 
-  if (!user) {
-    router.replace('/login')
-    return null
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      router.replace('/login');
+      return;
+    }
+
+    if (role === 'national' && !allow.includes('national')) {
+      router.replace('/admin/state-coordinators');
+      return;
+    }
+
+    if (role === 'coordinator' && !allow.includes('coordinator')) {
+      router.replace('/');
+      return;
+    }
+  }, [user, role, loading, allow, router]);
+
+  if (loading) {
+    return <div className="p-6">Loading...</div>;
   }
 
-  return <>{children}</>
+  if (!user || !role) {
+    return null;
+  }
+
+  return <>{children}</>;
 }
 
