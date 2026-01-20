@@ -7,7 +7,13 @@ type Role = 'national' | 'coordinator' | null;
 
 export function useAuth() {
   const [user, setUser] = useState<any>(null);
-  const [role, setRole] = useState<Role>(null);
+  const [role, setRole] = useState<string | null>(null);
+
+  const [profile, setProfile] = useState<{
+  role: Role;
+  primary_state_id: number | null;
+} | null>(null);
+
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,13 +35,14 @@ export function useAuth() {
 
       const { data: profile } = await supabase
         .from('profiles')
-        .select('role')
+        .select('role, primary_state_id')
         .eq('id', currentUser.id)
         .single();
 
       if (!mounted) return;
 
-      setRole(profile?.role ?? null);
+      setProfile(profile ?? null);
+
       setLoading(false);
     };
 
@@ -53,6 +60,12 @@ export function useAuth() {
     };
   }, []);
 
-  return { user, role, loading };
+  return {
+  user,
+  profile,
+  role: profile?.role ?? null,
+  loading,
+};
+
 }
 
